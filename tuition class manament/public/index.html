@@ -1,0 +1,247 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tuition Admin - Students</title>
+    <style>
+      :root{
+        --bg:#1a1216;
+        --card:#241b20;
+        --muted:#c1c7d0;
+        --accent:#ffb020; /* bright orange */
+        --accent-2:#ff6fb3; /* bright pink */
+        --glass: rgb(150, 147, 122);
+        --radius:12px;
+      }
+      *{box-sizing:border-box}
+  body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; background: linear-gradient(180deg,#0b0f12 0%, #151015 60%); color:#f6f7fb; margin:0; padding:40px; }
+      .container{ max-width:1100px; margin:0 auto; }
+      header{ display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:20px; }
+      h1{ margin:0; font-size:1.6rem; letter-spacing: -0.02em; }
+      .sub{ color:var(--muted); font-size:0.95rem }
+
+  .layout{ display:grid; grid-template-columns: 380px 1fr; gap:22px; align-items:start }
+
+      /* Form card */
+      .card{ background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border: 1px solid rgba(255,255,255,0.04); padding:18px; border-radius:var(--radius); box-shadow: 0 6px 20px rgba(2,6,23,0.6); }
+  /* use grid for neat alignment */
+  form .grid{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; align-items:end }
+  label{ font-size:0.88rem; color:var(--muted); display:block }
+  input, select, textarea{ width:100%; padding:10px 12px; margin-top:6px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:transparent; color:inherit; outline:none }
+  input:focus{ border-color:var(--accent-2); box-shadow: 0 6px 24px rgba(255,176,32,0.12); }
+      .form-actions{ display:flex; gap:8px; margin-top:12px }
+      button{ cursor:pointer; padding:9px 12px; border-radius:8px; border: none; font-weight:600 }
+  .btn-primary{ background: linear-gradient(90deg,var(--accent), #ff8a00); color:#0b0b0b }
+  .btn-ghost{ background:transparent; border:1px solid rgba(255,255,255,0.06); color:var(--muted) }
+
+      /* Table / list */
+  .toolbar{ display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:14px }
+      .search{ display:flex; gap:8px; align-items:center }
+  .search input{ min-width:220px; padding:10px 12px; border-radius:999px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.02); color:inherit }
+
+      .list-card{ overflow:hidden }
+      table{ width:100%; border-collapse:collapse; min-width:640px }
+  thead th{ text-align:left; font-size:0.9rem; color:var(--muted); padding:12px 14px; background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005)); }
+      tbody tr{ border-top:1px solid rgba(255,255,255,0.03) }
+      td{ padding:12px 14px; vertical-align:middle; }
+      .muted{ color:var(--muted); font-size:0.95rem }
+
+  .tag{ display:inline-block; padding:6px 10px; border-radius:999px; background:rgba(255,255,255,0.02); color:var(--muted); font-size:0.85rem }
+      .actions button{ margin-right:6px; padding:6px 8px; border-radius:8px; font-size:0.85rem }
+  .btn-edit{ background: linear-gradient(90deg,var(--accent-2), var(--accent)); color:#081015 }
+  .btn-delete{ background: linear-gradient(90deg,#ff6b6b, #ff8a00); color:#1b0303 }
+
+      footer{ margin-top:22px; color:var(--muted); font-size:0.85rem }
+
+      @media (max-width:900px){
+        .layout{ grid-template-columns: 1fr; }
+        table{ min-width:0 }
+      }
+    </style>
+  </head>
+    <body>
+         <center><h1>Tuiton class Admin Portal</h1></center>
+      <div class="container">
+        <header>
+          <div>
+         
+            <div class="sub">Manage student records — add, edit or remove students</div>
+          </div>
+          <div class="sub">Total: <span id="totalCount">0</span></div>
+        </header>
+
+        <div class="layout">
+          <div class="card">
+            <form id="studentForm">
+              <input type="hidden" id="studentId" />
+              <div class="grid">
+                <div><label>First name<input id="firstName" required /></label></div>
+                <div><label>Last name<input id="lastName" /></label></div>
+                <div><label>Email<input id="email" type="email" required /></label></div>
+                <div><label>Phone<input id="phone" /></label></div>
+                <div><label>Standard/Class<input id="className" /></label></div>
+                <div><label>Subject<input id="subject" /></label></div>
+                <div><label>Total Fees<input id="totalFees" type="number" min="0" /></label></div>
+                <div><label>Fees Paid<input id="feesPaid" type="number" min="0" value="0" /></label></div>
+                <div><label>Status<select id="status"><option>Active</option><option>Inactive</option></select></label></div>
+                <div><label>Remarks<textarea id="remarks" rows="2"></textarea></label></div>
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn-primary">Save</button>
+                <button type="button" id="cancelBtn" class="btn-ghost">Cancel</button>
+              </div>
+            </form>
+          </div>
+
+          <div>
+            <div class="toolbar">
+              <div class="search">
+                <input id="search" placeholder="Search by name, email or class" />
+              </div>
+              <div>
+                <button id="refreshBtn" class="btn-ghost">Refresh</button>
+              </div>
+            </div>
+
+                <div class="card list-card">
+                  <table id="studentsTable">
+                    <thead>
+                      <tr><th>Name</th><th>Email</th><th>Phone</th><th>Standard</th><th>Subject</th><th>Fees</th><th>Status</th><th>Remarks</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody></tbody>
+                  </table>
+                </div>
+          </div>
+        </div>
+
+        <footer>Tip: Click Edit to load a student into the form. Use Refresh if you made changes elsewhere.</footer>
+      </div>
+
+    <script>
+      const API = '/api/students';
+      let studentsCache = [];
+
+      async function fetchStudents() {
+        const res = await fetch(API);
+        const data = await res.json();
+        studentsCache = data;
+        renderTable(data);
+        document.getElementById('totalCount').textContent = data.length;
+      }
+
+      function renderTable(data){
+        const tbody = document.querySelector('#studentsTable tbody');
+        tbody.innerHTML = '';
+        if (!data.length) {
+          const tr = document.createElement('tr');
+          tr.innerHTML = '<td colspan="6" class="muted">No students found. Add a student using the form.</td>';
+          tbody.appendChild(tr);
+          return;
+        }
+        data.forEach(s => {
+          const tr = document.createElement('tr');
+          const fees = `${Number(s.feesPaid||0).toLocaleString()} / ${Number(s.totalFees||0).toLocaleString()}`;
+          tr.innerHTML = `<td><strong>${escapeHtml(s.firstName)} ${escapeHtml(s.lastName||'')}</strong></td><td>${escapeHtml(s.email)}</td><td>${escapeHtml(s.phone||'')}</td><td>${escapeHtml(s.class||'')}</td><td>${escapeHtml(s.subject||'')}</td><td>${fees}</td><td>${escapeHtml(s.status||'')}</td><td>${escapeHtml(s.remarks||'')}</td><td class="actions"><button data-id="${s._id}" class="edit btn-edit">Edit</button><button data-id="${s._id}" class="delete btn-delete">Delete</button></td>`;
+          tbody.appendChild(tr);
+        });
+      }
+
+      function escapeHtml(str){ return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
+
+      async function createStudent(payload) {
+        const res = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if (!res.ok) throw await res.json();
+        return res.json();
+      }
+
+      async function updateStudent(id, payload) {
+        const res = await fetch(`${API}/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if (!res.ok) throw await res.json();
+        return res.json();
+      }
+
+      async function deleteStudent(id) {
+        const res = await fetch(`${API}/${id}`, { method: 'DELETE' });
+        return res.json();
+      }
+
+      document.getElementById('studentForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('studentId').value;
+        const payload = {
+          firstName: document.getElementById('firstName').value.trim(),
+          lastName: document.getElementById('lastName').value.trim(),
+          email: document.getElementById('email').value.trim(),
+          phone: document.getElementById('phone').value.trim(),
+          class: document.getElementById('className').value.trim(),
+          subject: document.getElementById('subject').value.trim(),
+          totalFees: Number(document.getElementById('totalFees').value) || 0,
+          feesPaid: Number(document.getElementById('feesPaid').value) || 0,
+          status: document.getElementById('status').value,
+          remarks: document.getElementById('remarks').value.trim()
+        };
+        try {
+          if (id) {
+            await updateStudent(id, payload);
+          } else {
+            await createStudent(payload);
+          }
+          resetForm();
+          await fetchStudents();
+        } catch (err) {
+          const message = err && err.error ? err.error : (err && err.message) || 'Unknown error';
+          alert('Error saving student: ' + message);
+        }
+      });
+
+      document.getElementById('cancelBtn').addEventListener('click', resetForm);
+
+      function resetForm() {
+        document.getElementById('studentId').value = '';
+        document.getElementById('firstName').value = '';
+        document.getElementById('lastName').value = '';
+        document.getElementById('email').value = '';
+        document.getElementById('phone').value = '';
+        document.getElementById('className').value = '';
+      }
+
+      document.querySelector('#studentsTable tbody').addEventListener('click', async (e) => {
+        if (e.target.classList.contains('edit')) {
+          const id = e.target.dataset.id;
+          const res = await fetch(`${API}/${id}`);
+          const s = await res.json();
+          document.getElementById('studentId').value = s._id;
+          document.getElementById('firstName').value = s.firstName;
+          document.getElementById('lastName').value = s.lastName || '';
+          document.getElementById('email').value = s.email;
+          document.getElementById('phone').value = s.phone || '';
+          document.getElementById('className').value = s.class || '';
+          document.getElementById('subject').value = s.subject || '';
+          document.getElementById('totalFees').value = s.totalFees || '';
+          document.getElementById('feesPaid').value = s.feesPaid || 0;
+          document.getElementById('status').value = s.status || 'Active';
+          document.getElementById('remarks').value = s.remarks || '';
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        if (e.target.classList.contains('delete')) {
+          if (!confirm('Delete this student?')) return;
+          const id = e.target.dataset.id;
+          await deleteStudent(id);
+          await fetchStudents();
+        }
+      });
+
+      document.getElementById('refreshBtn').addEventListener('click', fetchStudents);
+      document.getElementById('search').addEventListener('input', (e) => {
+        const q = e.target.value.trim().toLowerCase();
+        if (!q) return renderTable(studentsCache);
+        const filtered = studentsCache.filter(s => (`${s.firstName} ${s.lastName}`.toLowerCase().includes(q) || (s.email||'').toLowerCase().includes(q) || (s.class||'').toLowerCase().includes(q)));
+        renderTable(filtered);
+      });
+
+      // initial load
+      fetchStudents();
+    </script>
+  </body>
+</html>
